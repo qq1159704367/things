@@ -1,0 +1,532 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <initializer_list>
+#include <ctype.h>
+#include <algorithm>
+#include "Matrix.hpp"
+#include <windows.h>
+
+using namespace std;
+
+enum Csymble
+{
+    H,
+    He,
+    Li,
+    Pi,
+    B,
+    C,
+    N,
+    O,
+    F,
+    Ne,
+    Na,
+    Mg,
+    Al,
+    Si,
+    P,
+    S,
+    Cl,
+    Ar,
+    K,
+    Ca,
+    Sc,
+    Ti,
+    V,
+    Cr,
+    Mn,
+    Fe,
+    Co,
+    Ni,
+    Cu,
+    Zn,
+    Ga,
+    Ge,
+    As,
+    Se,
+    Br,
+    Kr,
+    Rb,
+    Sr,
+    Y,
+    Zr,
+    Nb,
+    Mo,
+    Tc,
+    Ru,
+    Rh,
+    Pd,
+    Ag,
+    Cd,
+    In,
+    Sn,
+    Sb,
+    Te,
+    I,
+    Xe,
+    Cs,
+    Ba,
+    La,
+    Ce,
+    Pr,
+    Nd,
+    Pm,
+    Sm,
+    Eu,
+    Gd,
+    Tb,
+    Dy,
+    Ho,
+    Er,
+    Tm,
+    Yb,
+    Lu,
+    Hf,
+    Ta,
+    W,
+    Re,
+    Os,
+    Ir,
+    Pt,
+    Au,
+    Hg,
+    Tl,
+    Pb,
+    Bi,
+    Po,
+    At,
+    Rn,
+    Fr,
+    Ra,
+    Ac,
+    Th,
+    Pa,
+    U,
+    Np,
+    Pu,
+    Am,
+    Cm,
+    Bk,
+    Cf,
+    Es,
+    Fm,
+    Md,
+    No,
+    Lr,
+    Rf,
+    Db,
+    Sg,
+    Bh,
+    Hs,
+    Mt,
+    Ds,
+    Rg,
+    Cn,
+    Nh,
+    Fl,
+    Mc,
+    Lv,
+    Ts,
+    Og
+};
+
+vector<string> Csymble_str = {
+    "H", "He", "Li", "Pi", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar",
+    "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se",
+    "Br", "Kr", "Rb", "Sr", "Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn",
+    "Sb", "Te", "I", "Xe", "Cs", "Ba", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho",
+    "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt", "Au", "Hg", "Tl", "Pb", "Bi", "Po",
+    "At", "Rn", "Fr", "Ra", "Ac", "Th", "Pa", "U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es",
+    "Fm", "Md", "No", "Lr", "Rf", "Db", "Sg", "Bh", "Hs", "Mt", "Ds", "Rg", "Cn", "Nh", "Fl",
+    "Mc", "Lv", "Ts", "Og"};
+class element
+{
+public:
+    int symble;
+    int amount;
+    int bad;
+    element()
+    {
+        symble = H;
+        amount = 0;
+        bad = 1;
+    };
+    element(int symble, int amount)
+    {
+        bad = 0;
+        this->symble = symble;
+        this->amount = amount;
+        if (amount <= 0)
+            bad = 1;
+        if (symble > 120 || symble < 0)
+            bad = 1;
+    };
+    element(string sym, int amount)
+    {
+        this->amount = amount;
+        vector<string>::iterator it;
+        it = find(Csymble_str.begin(), Csymble_str.end(), sym);
+        if (it == Csymble_str.end())
+            bad = 1;
+        else
+            symble = it - Csymble_str.begin();
+    };
+};
+
+class compound
+{
+public:
+    int amount;
+    int bad;
+    vector<element> composition;
+    compound()
+    {
+        amount = 0;
+        bad = 1;
+        composition.clear();
+    };
+    compound(int amount, initializer_list<element> element_compose)
+    {
+        this->amount = amount;
+        composition.resize(element_compose.size());
+        int i = 0;
+        bad = 0;
+        for (auto ptr = element_compose.begin(); ptr != element_compose.end(); ptr++)
+        {
+            composition[i].amount = (*ptr).amount;
+            composition[i].symble = (*ptr).symble;
+            if ((*ptr).symble > 120 || (*ptr).symble < 0 || (*ptr).amount < 0)
+                bad = 1;
+        }
+    };
+    compound(const string &formula)
+    {
+        int getamount = 1;
+        int length = 0;
+        int getnum;
+        int getsymble;
+        string alpha;
+        int number;
+        for (int i = 0; i < formula.length(); i++)
+        {
+            if (getamount == 1)
+            {
+                if (formula[i] > '0' && formula[i] < '9')
+                    length++;
+                else
+                    getamount = 0;
+            }
+            if (getamount == 0)
+            {
+                if (length == 0)
+                    amount = 1;
+                else
+                    amount = stoi(formula.substr(0, length));
+                if (amount <= 0)
+                {
+                    bad = 1;
+                    break;
+                }
+                getamount = -1;
+                getsymble = 1;
+                length = 0;
+            }
+
+            if (getsymble == 1)
+            {
+                if (isalpha(formula[i]))
+                {
+                    if (isupper(formula[i]) && length != 0)
+                    {
+                        alpha = formula.substr(i - length, length);
+                        getnum = 1;
+                        length = 0;
+                    }
+                    else
+                        length++;
+                }
+                else
+                {
+                    getsymble = 0;
+                    if (length == 0)
+                    {
+                        bad = 1;
+                        break;
+                    }
+                    else
+                        alpha = formula.substr(i - length, length);
+                    getnum = 1;
+                    length = 0;
+                }
+            }
+            if (getnum == 1)
+            {
+                if (formula[i] > '0' && formula[i] < '9')
+                    length++;
+                else
+                {
+                    getnum = 0;
+                    if (length == 0)
+                        number = 1;
+                    else
+                        number = stoi(formula.substr(i - length, length));
+                    composition.push_back(element(alpha, number));
+                    bad = composition[composition.size() - 1].bad == 1;
+                    if (bad == 1)
+                        break;
+                    getsymble = 1;
+                    length = 0;
+                    i--;
+                }
+            }
+        }
+        if (length != 0 && bad != 1)
+        {
+            if (getnum == 1)
+            {
+                number = stoi(formula.substr(formula.size() - length, length));
+                composition.push_back(element(alpha, number));
+                bad = composition[composition.size() - 1].bad == 1;
+            }
+            else
+            {
+                number = 1;
+                alpha = formula.substr(formula.size() - length, length);
+                composition.push_back(element(alpha, number));
+                bad = composition[composition.size() - 1].bad == 1;
+            }
+        }
+    };
+    int isIn(int val, int pos = 0)
+    {
+        for (int i = pos; i < composition.size(); i++)
+        {
+            if (composition[i].symble == val)
+                return i;
+        }
+        return -1;
+    };
+    void show()
+    {
+        HANDLE hout = GetStdHandle(STD_OUTPUT_HANDLE);
+        SetConsoleTextAttribute(hout, 9);
+        if (amount != 1)
+            cout << amount << " ";
+        for (int i = 0; i < composition.size(); i++)
+        {
+            SetConsoleTextAttribute(hout, 8);
+            cout << Csymble_str[composition[i].symble];
+            SetConsoleTextAttribute(hout, 6);
+            if (composition[i].amount != 1)
+                cout << composition[i].amount;
+        }
+        SetConsoleTextAttribute(hout, 0xF);
+    }
+};
+
+template <typename T1>
+class count_container
+{
+private:
+    vector<pair<T1, int>> element_;
+
+public:
+    int find(T1 val)
+    {
+        int pos = 0;
+        for (pos; pos < this->size(); pos++)
+        {
+            pair<T1, int> temp = element_[pos];
+            if (val == temp.first)
+            {
+                return pos;
+            }
+        }
+        return pos;
+    };
+    count_container()
+    {
+        element_.clear();
+    };
+    void clear()
+    {
+        element_.clear();
+    };
+    T1 &operator[](int i)
+    {
+        return element_[i].first;
+    }
+    void add(T1 val, int n)
+    {
+        int pos;
+        if ((pos = find(val)) != this->size())
+        {
+            element_[pos].second += n;
+        }
+        else
+        {
+            element_.push_back({val, n});
+        }
+    };
+    int size()
+    {
+        return element_.size();
+    };
+};
+
+int balance(string equation)
+{
+    int error = 0, pos1, pos2, pos3;
+    vector<compound> reactant, product;
+    reactant.clear();
+    product.clear();
+    pos1 = equation.find('=', 0);
+    if (pos1 == -1)
+        return 1;
+    else
+    {
+        string temp, temp_;
+        compound _temp;
+        temp = equation.substr(0, pos1);
+        pos3 = 0;
+        pos2 = temp.find('+', pos3);
+        while (pos2 != -1)
+        {
+            temp_ = temp.substr(pos3, pos2 - pos3);
+            _temp = compound(temp_);
+            if (_temp.bad == 0)
+                reactant.push_back(_temp);
+            else
+                return 1;
+            pos3 = pos2 + 1;
+            pos2 = temp.find('+', pos3);
+        }
+        temp_ = temp.substr(pos3);
+        _temp = compound(temp_);
+        if (_temp.bad == 0)
+            reactant.push_back(_temp);
+        else
+            return 1;
+        temp = equation.substr(pos1 + 1);
+        pos3 = 0;
+        pos2 = temp.find('+', pos3);
+        while (pos2 != -1)
+        {
+            temp_ = temp.substr(pos3, pos2 - pos3);
+            _temp = compound(temp_);
+            if (_temp.bad == 0)
+                product.push_back(_temp);
+            else
+                return 1;
+            pos3 = pos2 + 1;
+            pos2 = temp.find('+', pos3);
+        }
+        temp_ = temp.substr(pos3);
+        _temp = compound(temp_);
+        if (_temp.bad == 0)
+            product.push_back(_temp);
+        else
+            return 1;
+    }
+    count_container<int> reac, prod;
+    compound temp;
+    element temp_;
+    for (int i = 0; i < reactant.size(); i++)
+    {
+        temp = reactant[i];
+        for (int j = 0; j < temp.composition.size(); j++)
+        {
+            temp_ = temp.composition[j];
+            reac.add(temp_.symble, temp_.amount * temp.amount);
+        }
+    }
+    for (int i = 0; i < product.size(); i++)
+    {
+        temp = product[i];
+        for (int j = 0; j < temp.composition.size(); j++)
+        {
+            temp_ = temp.composition[j];
+            prod.add(temp_.symble, temp_.amount * temp.amount);
+        }
+    }
+    if (reac.size() != prod.size())
+        return 1;
+    matrix equation_set;
+    equation_set.set(reac.size(), reactant.size() + product.size());
+    //定义矩阵（元素数*化合物总数）
+    for (int i = 0; i < reac.size(); i++)
+    {
+        for (int j = 0; j < reactant.size(); j++)
+        {
+            int pos;
+            pos = reactant[j].isIn(reac[i], 0);
+            while (pos != -1)
+            {
+                equation_set[i][j] = equation_set[i][j] + reactant[j].amount * reactant[j].composition[pos].amount;
+                pos = reactant[j].isIn(reac[i], pos + 1);
+            }
+        }
+        for (int j = 0; j < product.size(); j++)
+        {
+            int pos;
+            pos = product[j].isIn(reac[i], 0);
+            while (pos != -1)
+            {
+                equation_set[i][j + reactant.size()] = equation_set[i][j + reactant.size()] - product[j].amount * product[j].composition[pos].amount;
+                pos = product[j].isIn(reac[i], pos + 1);
+            }
+        }
+        //每一个元素有一条等式
+    }
+    //最后计算解的集合
+    matrix key = equation_set.solve0();
+    for (int j = 0; j < reactant.size(); j++)
+        reactant[j].amount = 0;
+    for (int j = 0; j < product.size(); j++)
+        product[j].amount = 0;
+    for (int j = 0; j < key.getRow(); j++)
+    {
+        int G = 1, Tol;
+        for (int i = 0; i < key[j].size(); i++)
+        {
+            G = key[j][i].mum * G / __gcd(G, key[j][i].mum);
+        }
+        Tol = 0;
+        for (int i = 0; i < reactant.size(); i++)
+            reactant[i].amount += (key[j][i] * G).amount();
+        for (int i = 0; i < product.size(); i++)
+            product[i].amount += (key[j][i + reactant.size()] * G).amount();
+    }
+    for (int i = 0; i < reactant.size(); i++)
+    {
+        reactant[i].show();
+        cout << " + ";
+    }
+    cout << "\b\b\b = ";
+    for (int i = 0; i < product.size(); i++)
+    {
+        product[i].show();
+        cout << " + ";
+    }
+    cout << "\b\b\b   ";
+    return error;
+}
+
+int main()
+{
+    HANDLE hout = GetStdHandle(STD_OUTPUT_HANDLE);
+    while (1)
+    {
+        string equation;
+        SetConsoleTextAttribute(hout, 0xF);
+        cout << endl;
+        cin >> equation;
+        if (balance(equation) == 1)
+        {
+            SetConsoleTextAttribute(hout, 4);
+            cout << endl
+                 << equation << endl;
+        }
+    }
+}
